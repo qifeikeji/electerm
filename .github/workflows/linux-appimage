@@ -1,0 +1,39 @@
+name: linux-appimage
+
+on:
+  workflow_dispatch: # Enables manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    environment: build
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+
+    - name: Install dependencies
+      run: |
+        npm install -g yarn
+        npm install
+
+    - name: Build project
+      run: npm run b
+
+    - name: Build AppImage
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BUILD_NUMBER: ${{ secrets.BUILD_NUMBER }}
+        CUSTOM_UPLOAD_URL: ${{ secrets.CUSTOM_UPLOAD_URL }}
+      run: node build/bin/build-linux-appimage
+
+    - name: Upload AppImage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: appimage
+        path: |
+          **/*.AppImage
+        retention-days: 7
